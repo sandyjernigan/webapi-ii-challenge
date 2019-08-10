@@ -20,17 +20,61 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Returns the post object with the specified id.
+router.get('/:id', async (req, res) => {
+  try {
+    const results = await DB.findById(req.params.id);
+    res.status(200).json(results);
+  } catch (error) {
+    // log error to database
+    console.log(error);
+    res.status(500).json({
+      message: 'Error retrieving the post',
+    });
+  }
+});
+
 // 	Returns an array of all the comment objects associated with the post with the specified id.
 router.get('/:id/comments', async (req, res) => {
   try {
     const results = await DB.findPostComments(req.params.id);
     res.status(200).json(results);
-    console.log(results)
   } catch (error) {
     // log error to database
     console.log(error);
     res.status(500).json({
       message: 'Error retrieving the results.',
+    });
+  }
+});
+
+// Create
+// Creates a post using the information sent inside the request body.
+router.post('/', async (req, res) => {
+  try {
+    // calling insert passing it a post object will add it to the database and return an object with the id of the inserted post. The object looks like this: { id: 123 }.
+    const results = await DB.insert(req.body);
+    res.status(200).json(results);
+  } catch (error) {
+    // log error to database
+    console.log(error);
+    res.status(500).json({
+      message: 'Error adding post',
+    });
+  }
+});
+
+// Creates a comment for the post with the specified id using information sent inside of the request body.
+router.post('/:id/comments', async (req, res) => {
+  try {
+    // insertComment(): calling insertComment while passing it a comment object will add it to the database and return an object with the id of the inserted comment. The object looks like this: { id: 123 }. This method will throw an error if the post_id field in the comment object does not match a valid post id in the database.
+    const results = await DB.insertComment(req.body);
+    res.status(200).json(results);
+  } catch (error) {
+    // log error to database
+    console.log(error);
+    res.status(500).json({
+      message: 'Error adding comment',
     });
   }
 });
