@@ -7,6 +7,7 @@ server.use(express.json());
 
 // Separate the endpoints that begin with `/api/posts` into a separate `Express Router`.
 server.use('/api/posts', PostsRouter);
+server.use('/api/posts/:id/comments', CommentsRouter);
 
 server.get('/', (req, res) => {
   res.send(`
