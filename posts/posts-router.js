@@ -67,9 +67,12 @@ router.post('/', async (req, res) => {
 
 // Creates a comment for the post with the specified id using information sent inside of the request body.
 router.post('/:id/comments', async (req, res) => {
+  const commentsInfo = {...req.body, post_id: req.params.id}
+
   try {
     // insertComment(): calling insertComment while passing it a comment object will add it to the database and return an object with the id of the inserted comment. The object looks like this: { id: 123 }. This method will throw an error if the post_id field in the comment object does not match a valid post id in the database.
-    const results = await DB.insertComment(req.body);
+    const commentAdded = await DB.insertComment(commentsInfo);
+    const results = await DB.findCommentById(commentAdded.id);
     res.status(200).json(results);
   } catch (error) {
     // log error to database
