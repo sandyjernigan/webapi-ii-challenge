@@ -53,7 +53,8 @@ router.get('/:id/comments', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     // calling insert passing it a post object will add it to the database and return an object with the id of the inserted post. The object looks like this: { id: 123 }.
-    const results = await DB.insert(req.body);
+    const addPost = await DB.insert(req.body);
+    const results = await DB.findById(addPost.id);
     res.status(200).json(results);
   } catch (error) {
     // log error to database
