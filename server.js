@@ -1,13 +1,12 @@
 const express = require('express');
 
-const HubsRouter = require('./posts/posts-router.js');
+const PostsRouter = require('./posts/posts-router.js');
 
 const server = express();
 server.use(express.json());
 
 // Separate the endpoints that begin with `/api/posts` into a separate `Express Router`.
 server.use('/api/posts', PostsRouter);
-server.use('/api/posts/:id/comments', CommentsRouter);
 
 server.get('/', (req, res) => {
   res.send(`
