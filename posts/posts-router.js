@@ -105,4 +105,24 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// Delete 
+// Removes the post with the specified id and returns the **deleted post object**. You may need to make additional calls to the database in order to satisfy this requirement.
+router.delete('/:id', async (req, res) => {
+  try {
+    // `remove(id)`: the remove method accepts an `id` as its first parameter and upon successfully deleting the post from the database it returns the number of records deleted.
+    const deleteResults = await DB.remove(req.params.id);
+    if (deleteResults > 0) {
+      res.status(200).json({ message: 'Deleted post object.' });
+    } else {
+      res.status(404).json({ message: 'The post could not be found' });
+    }
+  } catch (error) {
+    // log error to database
+    console.log(error);
+    res.status(500).json({
+      message: 'Error removing the hub',
+    });
+  }
+});
+
 module.exports = router;
