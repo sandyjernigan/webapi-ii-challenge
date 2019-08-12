@@ -5,45 +5,76 @@ const router = express.Router();
 // Database access will be done using the `db.js` file included inside the `data` folder.
 const DB = require('../data/db.js');
 
-// Read
-// Returns an array of all the post objects contained in the database.
+// Read All - Returns an array of all the post objects contained in the database.
 router.get('/', async (req, res) => {
   try {
+    // `find()`: calling find returns a promise that resolves to an array of all the `posts` contained in the database.
     const posts = await DB.find();
     res.status(200).json(posts);
   } catch (error) {
-    // log error to database
+    // If there's an error in retrieving the posts from the database:
     console.log(error);
     res.status(500).json({
-      message: 'Error retrieving the posts',
+      // return the following JSON object:
+      error: "The posts information could not be retrieved."
     });
   }
 });
 
-// Returns the post object with the specified id.
+// Read by ID - Returns the post object with the specified id.
 router.get('/:id', async (req, res) => {
   try {
+    // findById(id): this method expects an `id` as it's only parameter and returns the post corresponding to the `id` provided or an empty array if no post with that `id` is found.
     const results = await DB.findById(req.params.id);
-    res.status(200).json(results);
+
+    // If the post with the specified id is not found:
+    if (!Array.isArray(results) || !results.length) {
+      res.status(404).json({ // 404: Not Found
+        message: "The post with the specified ID does not exist."
+      });
+    } else {
+      res.status(200).json(results);
+    }
   } catch (error) {
-    // log error to database
+    // If there's an error in retrieving the post from the database:
     console.log(error);
     res.status(500).json({
-      message: 'Error retrieving the post',
+      error: "The post information could not be retrieved."
     });
   }
 });
 
-// 	Returns an array of all the comment objects associated with the post with the specified id.
+// 	Read Comments - Returns an array of all the comment objects associated with the post with the specified id.
 router.get('/:id/comments', async (req, res) => {
   try {
-    const results = await DB.findPostComments(req.params.id);
-    res.status(200).json(results);
+    const postResults = await DB.findById(req.params.id);
+
+    // If the post with the specified id is not found:
+    if (!postResults || !Array.isArray(postResults) || !postResults.length) {
+      res.status(404).json({ // 404: Not Found
+        message: "The post with the specified ID does not exist."
+      });
+    } else {
+
+      // (else) post found, check for comments
+      const commentResults = await DB.findPostComments(req.params.id);
+
+      // check if comments exists
+      if (!Array.isArray(commentResults) || !commentResults.length) {
+        res.status(404).json({ // 404: Not Found
+          message: "No comments found."
+        });
+      } else {
+
+        // (else) return comments
+        res.status(200).json(commentResults);
+      }
+    }
   } catch (error) {
-    // log error to database
+    // If there's an error in retrieving the comments from the database
     console.log(error);
     res.status(500).json({
-      message: 'Error retrieving the results.',
+      error: "The comments information could not be retrieved.",
     });
   }
 });
