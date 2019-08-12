@@ -173,22 +173,21 @@ router.put('/:id', async (req, res) => {
           errorMessage: "Please provide title and contents for the post.",
         });
       } else {
-
         // update(id, post): accepts two arguments, the first is the id of the post to update and the second is an object with the changes to apply. It returns the count of updated records. If the count is 1 it means the record was updated correctly.
         const updateResults = await DB.update(req.params.id, req.body);
         if (updateResults) {
           const results = await DB.findById(req.params.id);
-          res.status(200).json(results);
+          res.status(200).json(results); // return HTTP status code 200 (OK) and the newly updated post.
         } else {
           res.status(404).json({ message: 'The post could not be found' });
         }
       }
     }
   } catch (error) {
-    // log error to database
+    // If there's an error when updating the post:
     console.log(error);
     res.status(500).json({
-      message: 'Error updating the post',
+      error: "The post information could not be modified."
     });
   }
 });
