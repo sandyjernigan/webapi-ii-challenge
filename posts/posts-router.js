@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
   } catch (error) {
     // If there's an error in retrieving the posts from the database:
     console.log(error);
-    res.status(500).json({
+    res.status(500).json({ // respond with HTTP status code 500 (Server Error).
       // return the following JSON object:
       error: "The posts information could not be retrieved."
     });
@@ -38,7 +38,7 @@ router.get('/:id', async (req, res) => {
   } catch (error) {
     // If there's an error in retrieving the post from the database:
     console.log(error);
-    res.status(500).json({
+    res.status(500).json({ // respond with HTTP status code 500 (Server Error).
       error: "The post information could not be retrieved."
     });
   }
@@ -73,7 +73,7 @@ router.get('/:id/comments', async (req, res) => {
   } catch (error) {
     // If there's an error in retrieving the comments from the database
     console.log(error);
-    res.status(500).json({
+    res.status(500).json({ // respond with HTTP status code 500 (Server Error).
       error: "The comments information could not be retrieved.",
     });
   }
@@ -83,15 +83,33 @@ router.get('/:id/comments', async (req, res) => {
 // Creates a post using the information sent inside the request body.
 router.post('/', async (req, res) => {
   try {
-    // calling insert passing it a post object will add it to the database and return an object with the id of the inserted post. The object looks like this: { id: 123 }.
-    const addPost = await DB.insert(req.body);
-    const results = await DB.findById(addPost.id);
-    res.status(200).json(results);
+    const { title, contents } = req.body
+
+    // If the request body is missing the title or contents property:
+    if (!title || !contents) {
+      res.status(400).json({ // respond with HTTP status code 400 (Bad Request)
+        errorMessage: "Please provide title and contents for the post.",
+      });
+    } else {
+      // calling insert passing it a post object will add it to the database and return an object with the id of the inserted post. The object looks like this: { id: 123 }.
+      const addPost = await DB.insert(req.body);
+      const results = await DB.findById(addPost.id);
+
+      // check that post was added
+      if (results) {
+        res.status(201).json(results); // return HTTP status code 201 (Created)
+      } else {
+        res.status(404).json({ // return HTTP status code 404 (Not Found).
+          errorMessage: "There was an error while saving the post.",
+        });
+      }
+    }
+
   } catch (error) {
-    // log error to database
+    // If there's an error while saving the post:
     console.log(error);
-    res.status(500).json({
-      message: 'Error adding post',
+    res.status(500).json({ // respond with HTTP status code 500 (Server Error)
+      error: "There was an error while saving the post to the database",
     });
   }
 });
@@ -99,17 +117,39 @@ router.post('/', async (req, res) => {
 // Creates a comment for the post with the specified id using information sent inside of the request body.
 router.post('/:id/comments', async (req, res) => {
   const commentsInfo = {...req.body, post_id: req.params.id}
-
   try {
-    // insertComment(): calling insertComment while passing it a comment object will add it to the database and return an object with the id of the inserted comment. The object looks like this: { id: 123 }. This method will throw an error if the post_id field in the comment object does not match a valid post id in the database.
-    const commentAdded = await DB.insertComment(commentsInfo);
-    const results = await DB.findCommentById(commentAdded.id);
-    res.status(200).json(results);
+    const postResults = await DB.findById(req.params.id);
+
+    // If the post with the specified id is not found:
+    if (!postResults || !Array.isArray(postResults) || !postResults.length) {
+      res.status(404).json({ // 404: Not Found
+        message: "The post with the specified ID does not exist."
+      });
+    } else { 
+      // If the request body is missing the text property:
+      const { text } = req.body
+      if (!text) {
+        res.status(400).json({ // respond with HTTP status code 400 (Bad Request).
+          errorMessage: "Please provide text for the comment."
+        });
+      } else {
+        // insertComment(): calling insertComment while passing it a comment object will add it to the database and return an object with the id of the inserted comment. The object looks like this: { id: 123 }. This method will throw an error if the post_id field in the comment object does not match a valid post id in the database.
+        const commentAdded = await DB.insertComment(commentsInfo);
+        const results = await DB.findCommentById(commentAdded.id);
+        if (!results) {
+          res.status(404).json({ // 404: Not Found
+            errorMessage: "Error adding comment."
+          });
+        } else {
+          res.status(201).json(results); // return HTTP status code 201 (Created).
+        }
+      }
+    }
   } catch (error) {
     // log error to database
     console.log(error);
-    res.status(500).json({
-      message: 'Error adding comment',
+    res.status(500).json({ // respond with HTTP status code 500 (Server Error).
+      error: "There was an error while saving the comment to the database"
     });
   }
 });
@@ -117,15 +157,32 @@ router.post('/:id/comments', async (req, res) => {
 // Update
 // 	Updates the post with the specified id using data from the request body. Returns the modified document, NOT the original.
 router.put('/:id', async (req, res) => {
-  console.log(req.params.id)
   try {
-    // update(id, post): accepts two arguments, the first is the id of the post to update and the second is an object with the changes to apply. It returns the count of updated records. If the count is 1 it means the record was updated correctly.
-    const updateResults = await DB.update(req.params.id, req.body);
-    if (updateResults) {
-      const results = await DB.findById(req.params.id);
-      res.status(200).json(results);
-    } else {
-      res.status(404).json({ message: 'The post could not be found' });
+    const postResults = await DB.findById(req.params.id);
+
+    // If the post with the specified id is not found:
+    if (!postResults || !Array.isArray(postResults) || !postResults.length) {
+      res.status(404).json({ // 404: Not Found
+        message: "The post with the specified ID does not exist."
+      });
+    } else { 
+      const { title, contents } = req.body
+      // If the request body is missing the title or contents property:
+      if (!title || !contents) {
+        res.status(400).json({ // respond with HTTP status code 400 (Bad Request)
+          errorMessage: "Please provide title and contents for the post.",
+        });
+      } else {
+
+        // update(id, post): accepts two arguments, the first is the id of the post to update and the second is an object with the changes to apply. It returns the count of updated records. If the count is 1 it means the record was updated correctly.
+        const updateResults = await DB.update(req.params.id, req.body);
+        if (updateResults) {
+          const results = await DB.findById(req.params.id);
+          res.status(200).json(results);
+        } else {
+          res.status(404).json({ message: 'The post could not be found' });
+        }
+      }
     }
   } catch (error) {
     // log error to database
