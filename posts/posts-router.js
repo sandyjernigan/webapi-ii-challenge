@@ -199,15 +199,17 @@ router.delete('/:id', async (req, res) => {
     // `remove(id)`: the remove method accepts an `id` as its first parameter and upon successfully deleting the post from the database it returns the number of records deleted.
     const deleteResults = await DB.remove(req.params.id);
     if (deleteResults > 0) {
-      res.status(200).json({ message: 'Deleted post object.' });
+      res.status(200).json({ message: 'Deleted post object was successful.' });
     } else {
-      res.status(404).json({ message: 'The post could not be found' });
+      res.status(404).json({ // return HTTP status code 404 (Not Found).
+        message: "The post with the specified ID does not exist."
+      });
     }
   } catch (error) {
     // log error to database
     console.log(error);
     res.status(500).json({
-      message: 'Error removing the hub',
+      error: "The post could not be removed"
     });
   }
 });
