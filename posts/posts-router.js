@@ -214,4 +214,50 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Read Comment - get comment by id
+router.get('/:id/comments/:commentID', async (req, res) => {
+  try {
+    const commentResults = await DB.findCommentById(req.params.commentID);
+
+    if (commentResults) {
+      res.status(200).json(commentResults);
+    } else {
+      res.status(404).json({ // return HTTP status code 404 (Not Found).
+        message: "The comment with the specified ID does not exist."
+      });
+    }
+  } catch (error) {
+    // log error to database
+    console.log(error);
+    res.status(500).json({
+      error: "The comment not found."
+    });
+  }
+});
+
+// Delete Comment - Removes comment by id
+router.delete('/:id/comments/:commentID', async (req, res) => {
+  try {
+    const commentResults = await DB.findCommentById(req.params.commentID);
+
+    if (commentResults) {
+      // removeComment(id)
+      const deleteResults = await DB.removeComment(req.params.commentID);
+      if (deleteResults > 0) {
+        res.status(200).json({ message: 'Deleted comment object was successful.' });
+      } else {
+        res.status(404).json({ // return HTTP status code 404 (Not Found).
+          message: "The comment with the specified ID does not exist."
+        });
+      }
+    }
+  } catch (error) {
+    // log error to database
+    console.log(error);
+    res.status(500).json({
+      error: "The comment could not be removed"
+    });
+  }
+});
+
 module.exports = router;
